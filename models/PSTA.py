@@ -112,90 +112,39 @@ class PSTA(nn.Module):
 
     def forward(self, x, pids=None, camid=None):
         b, t, c, w, h = x.size()
-        #print(x.size())
-        #
         x = x.view(b * t, c, w, h)
         feat_map = self.base(x)  # (b * t, c, 16, 8)
         w = feat_map.size(2)
         h = feat_map.size(3)
-       # print(feat_map.shape)
         feat_map = self.down_channel(feat_map)
-      #  print(feat_map.shape)
         feat_map = feat_map.view(b, t, -1, w, h)
-       # print(feat_map.shape)
         feature_list = []
         list = []
 
-        feat_map_1,spa_att1 = self.layer1(feat_map)  # b x 4 x 1024 x 16 x 8
-        y = x.reshape(b, t, 3, 256, 128)
-        for i in range(spa_att1.size(0)):
-            for j in range(spa_att1.size(1)):
-                #img2 = y[i][j].squeeze().cpu().numpy().transpose(1, 2, 0)
-                visual_batch(spa_att1[i][j], y[i][j], i, j, "ours")
-        # reshape_map = feat_map_1.view(-1, 1024, 16, 8) # add
-        # feat_vect = self.avg_2d(reshape_map).view(16, 4, -1) #gap  b x 4 x 1024  add
-        # channel_para = self.theta_channel(feat_vect.permute(0, 2, 1))#add
-        # para0 = torch.cat((channel_para[:, :, 0], channel_para[:, :, 1], channel_para[:, :, 2], channel_para[:, :, 3]), 1)#add
-        # para_00 = self.channel_attention(para0).view(16, -1, 1, 1)  # 大小（16 x 1024 x 1 x 1)
-        # feature_1 = torch.mean(feat_map_1, 1)*para_00 # b x 1024 x 16 x 8
-        ''' 
-        b, t, c, w, h = feat_map_1.size()
-        feat_vect = self.avg_2d(feat_map_1).view(b, t, -1)  # gap  b x 4 x 1024  add
-        para_00 =self.channel_attention(feat_vect).view(b, t, 1024, 1,1)
-        feat_map_1 = feat_map_1 * para_00
-        # add cbam 
-        # input: b x t x c x w x h
-        # output: b x t x c x w x h
-        # add multi-
-        feature_1 = torch.sum(feat_map_1, 1)
-        '''
+        feat_map_1 = self.layer1(feat_map)  # b x 4 x 1024 x 16 x 8
         feature_1 = torch.mean(feat_map_1, 1)
-        #b, t, c, w, h = feat_map_1.size()
-        #feat_vect = self.avg_2d(feat_map_1).view(b, t, -1)      # b x t x 1024
-        #para00 = self.channel_attention(feat_vect) # b x t x 1024
-        #feature1 = torch.sum((feat_vect * para00),1)
         feature1 = self.avg_2d(feature_1).view(b, -1)
         feature_list.append(feature1)
         list.append(feature1)
 
-        feat_map_2,spa_att2 = self.layer2(feat_map_1)
+        feat_map_2 = self.layer2(feat_map_1)
         feature_2 = torch.mean(feat_map_2, 1)
-        '''
-        b, t, c, w, h = feat_map_2.size()
-        feat_vect_2 = self.avg_2d(feat_map_2).view(b, t, -1)  # gap  b x 4 x 1024  add
-        para_01 =self.channel_attention(feat_vect_2).view(b, t, 1024, 1,1)
-        feat_map_2 = feat_map_2 * para_01
-        feature_2 = torch.sum(feat_map_2, 1)
-        '''
-        #b, t, c, w, h = feat_map_2.size()
-        #feat_vect_2 = self.avg_2d(feat_map_2).view(b, t, -1)      # b x t x 1024
-        #para01 = self.channel_attention(feat_vect_2) # b x t x 1024
-        #feature_2 = torch.sum((feat_vect_2 * para01),1) #b x 1024
         feature_2 = self.avg_2d(feature_2).view(b, -1)
         para0 = self.channel_attention(feature_2)
         para1 = self.channel_attention(feature1)
-        #list.append(feature_2)
 
-        #feature2 = torch.stack(list, 1)
-        #feature2 = torch.mean(feature2, 1)
         feature2 = para0 * feature_2 + para1 * feature1
         feature_list.append(feature2)
 
-        feat_map_3,spa_att3 = self.layer3(feat_map_2)
+        feat_map_3 = self.layer3(feat_map_2)
         feature_3 = torch.mean(feat_map_3, 1)
         feature_3 = self.avg_2d(feature_3).view(b, -1)
-        #b, t, c, w, h = feat_map_3.size()
-        #feat_vect_3 = self.avg_2d(feat_map_3).view(b, t, -1)      # b x t x 1024
-        #para02 = self.channel_attention(feat_vect_3) # b x t x 1024
-        #feature_3 = torch.sum((feat_vect_3 * para02),1) #b x 1024
+
         para3 = self.channel_attention(feature_3)
         para4 = self.channel_attention(feature_2)
         para5 = self.channel_attention(feature1)
 
-        #list.append(feature_3)
 
-        #feature3 = torch.stack(list, 1)
-        #feature3 = torch.mean(feature3, 1)
         feature3 = para3 * feature_3 + para4 * feature_2 + para5 * feature1
         feature_list.append(feature3)
 

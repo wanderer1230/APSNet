@@ -64,12 +64,12 @@ class STAM(nn.Module):
         embed_feat = self.Embeding(reshape_map).view(b, t, -1, h, w)
 
         gap_feat_map0 = self.TRAG(feat_map, reshape_map, feat_vect, embed_feat)
-        gap_feat_map,spa_att = self.SRAG(feat_map, reshape_map, embed_feat, feat_vect, gap_feat_map0)
+        gap_feat_map = self.SRAG(feat_map, reshape_map, embed_feat, feat_vect, gap_feat_map0)
         gap_feat_map = self.conv_block(gap_feat_map)
         gap_feat_map = gap_feat_map.view(b, -1, c, h, w)
         torch.cuda.empty_cache()
 
-        return gap_feat_map,spa_att
+        return gap_feat_map
 
 
 

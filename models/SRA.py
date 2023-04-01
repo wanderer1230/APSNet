@@ -106,4 +106,4 @@ class SRA(nn.Module):
         aggregative_features = aggregative_features.view(b * aggregative_features.size(1), -1, h, w)
         torch.cuda.empty_cache()
 
-        return aggregative_features,para_spa
+        return aggregative_features

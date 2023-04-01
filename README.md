@@ -7,7 +7,11 @@ sh ./script/Mars_train.sh
 ```
 sh ./script/Mars_test.sh
 ```
-
+|Dataset | Mars | 
+|:--:|:--:|
+|Rank-1|91.2|
+|mAP|86.2|
+|model|[download](https://pan.baidu.com/s/1gJNB8s8nJ9chfHzDTI6QXg)|
 #  Acknowledgement
 Our code is based PSTA.<br>
 @inproceedings{PSTA,
